@@ -12,6 +12,8 @@ class CommandLineInterface(object):
     )
 
     parser.add_argument(
+        '-fi',
+        '--file',
         metavar='<file>',
         type=str,
         dest='file',
@@ -20,6 +22,8 @@ class CommandLineInterface(object):
     )
 
     parser.add_argument(
+        '-f',
+        '--folder',
         metavar='<folder>',
         type=str,
         dest='folder',
@@ -28,6 +32,8 @@ class CommandLineInterface(object):
     )
 
     parser.add_argument(
+        '-a',
+        '--area',
         metavar='<areaname>',
         type=str,
         dest='areaname',
@@ -56,18 +62,16 @@ class CommandLineInterface(object):
     )
 
     group.add_argument(
-        '-a',
-        '--area',
-        metavar='<location>',
-        type=str,
+        '-na',
+        '--newarea',
         dest='new_area',
-        nargs=1,
+        action='store_true',
         help='Add a new area',
     )
 
     group.add_argument(
-        '-f',
-        '--folder',
+        '-nf',
+        '--newfolder',
         metavar='<tags>',
         type=str,
         dest='add_folder',
@@ -79,28 +83,28 @@ class CommandLineInterface(object):
         args = self.parser.parse_args()
 
         if args.add_folder:
-            if not (args.area and args.folder):
+            if not (args.areaname and args.folder):
                 self.parser.error("--folder requires an area and folder to create the folder in with the folder name")
                 return
-            manager.add_folder(area=args.area, foldername=args.folder)
+            manager.add_folder(area=args.areaname, foldername=args.folder)
 
         if args.move:
-            if not (args.file and args.area):
+            if not (args.file and args.areaname):
                 self.parser.error("--move requires and area and a file to move the file in")
                 return
-            manager.move(area=args.area, file=args.file)
+            manager.move(area=args.areaname, file=args.file)
 
         if args.add_tags:
-            if not (args.area and args.folder):
+            if not (args.areaname and args.folder):
                 self.parser.error("--tag requires the area and folder to find the folder to add tags to")
                 return
-            manager.add_tag(area=args.area, folder=args.folder, tags=args.new_tags)
+            manager.add_tag(area=args.areaname, folder=args.folder, tags=args.new_tags)
 
         if args.new_area:
-            if not args.area:
+            if not args.areaname:
                 self.parser.error("--area requires areaname for the location of the new area")
                 return
-            manager.new_area(area=args.area)
+            manager.new_area(area=args.areaname)
 
         # This is useless but its so gross i love it
         # print(all([vars(args)[arg] for arg in vars(args) if arg not in {"area", "file", "folder"}]))
