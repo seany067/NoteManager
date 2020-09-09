@@ -86,7 +86,7 @@ class CommandLineInterface(object):
             if not (args.areaname and args.folder):
                 self.parser.error("--folder requires an area and folder to create the folder in with the folder name")
                 return
-            manager.add_folder(area=args.areaname, foldername=args.folder)
+            manager.add_folder(area=args.areaname, foldername=args.folder, tags=args.add_folder)
 
         if args.move:
             if not (args.file and args.areaname):
@@ -98,7 +98,7 @@ class CommandLineInterface(object):
             if not (args.areaname and args.folder):
                 self.parser.error("--tag requires the area and folder to find the folder to add tags to")
                 return
-            manager.add_tag(area=args.areaname, folder=args.folder, tags=args.new_tags)
+            manager.add_tags(area=args.areaname, folder=args.folder, tags=args.add_tags)
 
         if args.new_area:
             if not args.areaname:

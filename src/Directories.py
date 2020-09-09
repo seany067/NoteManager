@@ -6,14 +6,12 @@ import ntpath
 
 def is_managed(func):
     def wrapper(*args, **kwargs):
-        area = kwargs['area'] if 'area' in kwargs else args[0]
-        if os.path.exists(os.path.join(area, '.note_manager', 'settings.json')) and \
-                os.path.isfile(os.path.join(area, '.note_manager', 'settings.json')):
+        area = kwargs['area'] if 'area' in kwargs else args[1]
+        if os.path.exists(os.path.join(area, '.note_manager', 'settings.json')) and os.path.isfile(os.path.join(area, '.note_manager', 'settings.json')):
             return func(*args, **kwargs)
         else:
             print("This not currently managed area")
             return
-
     return wrapper
 
 
@@ -25,7 +23,6 @@ def is_area(func):
         else:
             print("This area does not exists")
             return
-
     return wrapper
 
 
@@ -78,7 +75,7 @@ class DirectoryManager(object):
 
     @is_area
     @is_managed
-    def add_folder(self, area, foldername):
+    def add_folder(self, area, foldername, tags):
         if not os.path.exists(os.path.join(area, foldername)):
             print("Creating new folder...")
             os.mkdir(area, foldername)
@@ -86,10 +83,10 @@ class DirectoryManager(object):
 
         new_folder = {
             'name': foldername,
-            'tags': []
+            'tags': tags,
         }
         settings = self._get_settings(area)
-        settings["folder"][foldername] = new_folder
+        settings["folders"][foldername] = new_folder
         self._write_settings(area=area, settings=settings)
 
     @is_area
@@ -100,6 +97,8 @@ class DirectoryManager(object):
         settings = self._get_settings(area=area)
         if settings["folders"][folder] is not None:
             settings["folders"][folder]["tags"] += tags
+            settings["folders"][folder]["tags"] = list(set(settings["folders"][folder]["tags"]))  # Removes duplicates
+            self._write_settings(area=area, settings=settings)
         else:
             print("This folder is not currently being managed")
 
@@ -122,7 +121,7 @@ class DirectoryManager(object):
 
     @is_managed
     def _get_settings(self, area):
-        with open(os.path.join(area, self.settings_folder, self.settings_file, 'r')) as file:
+        with open(os.path.join(area, self.settings_folder, self.settings_file), 'r') as file:
             settings = json.load(file)
         return settings
 
