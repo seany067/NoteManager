@@ -10,7 +10,7 @@ def is_managed(func):
         if os.path.exists(os.path.join(area, '.note_manager', 'settings.json')) and os.path.isfile(os.path.join(area, '.note_manager', 'settings.json')):
             return func(*args, **kwargs)
         else:
-            print("This not currently managed area")
+            print("This not currently managed area or this area does not exist")
             return
     return wrapper
 
@@ -19,6 +19,19 @@ def is_area(func):
     def wrapper(*args, **kwargs):
         area = kwargs['area'] if 'area' in kwargs else args[1]
         if os.path.exists(area) and os.path.isdir(area):
+            return func(*args, **kwargs)
+        else:
+            print("This area does not exists")
+            return
+    return wrapper
+
+
+def is_folder(func):
+    def wrapper(*args, **kwargs):
+        area = kwargs['area'] if 'area' in kwargs else args[1]
+        folder = kwargs['folder'] if 'folder' in kwargs else args[2]
+        folder_full = os.path.join(area, folder)
+        if os.path.exists(folder) and os.path.isdir(folder_full):
             return func(*args, **kwargs)
         else:
             print("This area does not exists")
@@ -36,13 +49,11 @@ class DirectoryManager(object):
     def __init__(self, cli=False):
         self.cli = cli
 
-    @is_area
     @is_managed
     def get_folders(self, area):
         settings = self._get_settings(area)
         return [folder for folder, values in settings["folders"].items()]
 
-    @is_area
     @is_managed
     def move(self, area, file):
         settings = self._get_settings(area)
@@ -79,34 +90,41 @@ class DirectoryManager(object):
         # This should move the file
         os.rename(file, os.path.join(area, highest[0], ntpath.basename(file)))
 
-    @is_area
     @is_managed
-    def add_folder(self, area, foldername, tags):
-        if not os.path.exists(os.path.join(area, foldername)):
+    def add_folder(self, area, folder, tags):
+        if not os.path.exists(os.path.join(area, folder)):
             print("Creating new folder...")
-            os.mkdir(area, foldername)
+            os.mkdir(area, folder)
             print("Folder created")
 
         new_folder = {
-            'name': foldername,
+            'name': folder,
             'tags': tags,
         }
         settings = self._get_settings(area)
-        settings["folders"][foldername] = new_folder
+        settings["folders"][folder] = new_folder
         self._write_settings(area=area, settings=settings)
 
-    @is_area
     @is_managed
+    @is_folder
     def add_tags(self, area, folder, tags):
-        if not os.path.exists(os.path.join(area, folder)):
-            raise FileNotFoundError
         settings = self._get_settings(area=area)
-        if settings["folders"][folder] is not None:
-            settings["folders"][folder]["tags"] += tags
-            settings["folders"][folder]["tags"] = list(set(settings["folders"][folder]["tags"]))  # Removes duplicates
-            self._write_settings(area=area, settings=settings)
-        else:
-            print("This folder is not currently being managed")
+        settings["folders"][folder]["tags"] += tags
+        settings["folders"][folder]["tags"] = list(set(settings["folders"][folder]["tags"]))  # Removes duplicates
+        self._write_settings(area=area, settings=settings)
+
+    @is_managed
+    @is_folder
+    def set_tags(self, area, folder, tags):
+        settings = self._get_settings(area=area)
+        settings["folders"][folder]["tags"] = tags
+        settings["folders"][folder]["tags"] = list(set(settings["folders"][folder]["tags"]))  # Removes duplicates
+        self._write_settings(area=area, settings=settings)
+
+    @is_managed
+    @is_folder
+    def get_tags(self, area, folder, tags):
+        return self._get_settings(area=area)["folders"][folder]["tags"]
 
     @is_area
     def new_area(self, area):
@@ -118,7 +136,6 @@ class DirectoryManager(object):
             os.mkdir(os.path.join(area, self.settings_folder))
         self._write_settings(area, self.settings_template)
 
-    @is_area
     @is_managed
     def add_all_folders(self, area):
         for dir in os.listdir(area):
@@ -131,6 +148,7 @@ class DirectoryManager(object):
             settings = json.load(file)
         return settings
 
+    @is_area
     def _write_settings(self, area, settings):
         with open(os.path.join(area, self.settings_folder, self.settings_file), 'w+') as file:
             json.dump(settings, file)

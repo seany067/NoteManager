@@ -3,8 +3,7 @@ import tkinter as tk
 import tkinter.font as tkFont
 import os
 from tkinter.messagebox import showwarning
-
-from .CustomWidgets import MarkdownEditor
+from .CustomFrames import ManagePage, EditPage
 
 
 # TODO: Make usre all widgets are added to widgets dictoinary, or not depending on if I decide that this is needed
@@ -64,7 +63,7 @@ class MainLayout(tk.Frame):
         self.widgets["menubar"]["frm_menubar"] = frm_menubar
 
         btn_openarea = tk.Button(master=frm_menubar,
-                                 text="Open area",
+                                 text="Select area",
                                  command=self.browseFiles,
                                  **self.button_styles,
                                  )
@@ -101,87 +100,21 @@ class MainLayout(tk.Frame):
                               foreground=self.colours["text"],
                               font=self.fnt_main
                               )
+        self.widgets["statusbar"]["lbl_status"] = lbl_status
         lbl_status.grid(row=0, column=0, sticky="ens")
         frm_statusbar.pack(fill=tk.X, side=tk.TOP, expand=False)
 
-    def build_editpage(self, container):
-        frm_main = tk.Frame(master=container,
-                            width=800,
-                            height=800,
-                            background=self.colours["main"],
-                            )
-        frm_main.rowconfigure(0, weight=1)
-        frm_main.columnconfigure(1, weight=1)
-
-        frm_buttons = tk.Frame(master=frm_main,
-                               background=self.colours["border"],
-                               highlightthickness=1,
-                               relief=tk.RIDGE,
-                               )
-        btn_save = tk.Button(master=frm_buttons, text="Edit",
-                             **self.button_styles
-                             )
-        btn_save.grid(row=0, column=0, sticky="ew")
-        frm_buttons.grid(row=0, column=0, sticky="ns", )
-
-        frm_textarea = tk.Frame(master=frm_main,
-                                background=self.colours["main"],
-                                )
-        self.widgets["editpage"]["frm_textarea"] = frm_textarea
-        frm_textarea.grid(row=0, column=1, sticky="nsew")
-
-        txt_area = MarkdownEditor(master=frm_textarea,
-                                  background=self.colours["main"],
-                                  foreground=self.colours["text"],
-                                  font=self.fnt_main,
-                                  borderwidth=1,
-                                  relief=tk.SUNKEN,
-                                  padx=5,
-                                  pady=5,
-                                  )
-        txt_area.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
-
-        vsb_area = tk.Scrollbar(
-            master=frm_textarea,
-            orient="vertical",
-            borderwidth=1,
-            command=txt_area.yview)
-        self.widgets["editpage"]["vsb_area"] = vsb_area
-        vsb_area.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
-        txt_area.configure(yscrollcommand=vsb_area.set)
-
-        frm_main.grid(row=0, column=0, sticky="nsew")
-        return frm_main
-
-    # TODO: Change this be a real page to manage the current area instead of a duplicate of edit
-    def build_managepage(self, container):
-        frm_main = tk.Frame(master=container,
-                            width=800,
-                            height=800,
-                            background=self.colours["main"],
-                            )
-        frm_main.rowconfigure(0, weight=1)
-        frm_main.columnconfigure(1, weight=1)
-
-        lb_folders = tk.Listbox(
-            master=frm_main,
-        )
-        if self.data["current_area"] is not None:
-            for folder in self.data["manager"].get_folders(self.data["current_area"]):
-                lb_folders.insert(folder)
-        lb_folders.grid(row=0, column=0, sticky="nsew")
-        lbl_text2 = tk.Label(
-            master=frm_main,
-            text="Hello there",
-        )
-        lbl_text2.grid(row=0, column=1, sticky="nsew")
-
-        frm_main.grid(row=0, column=0, sticky="nsew")
-        return frm_main
-
     def build_pages(self):
-        self.frames["editpage"] = self.build_editpage(self.content_frame)
-        self.frames["managepage"] = self.build_managepage(self.content_frame)
+        self.frames["editpage"] = EditPage(parent=self.content_frame,
+                                           colours=self.colours,
+                                           data=self.data,
+                                           button_styles=self.button_styles,
+                                           fnt_main=self.fnt_main)
+        self.frames["managepage"] = ManagePage(parent=self.content_frame,
+                                               colours=self.colours,
+                                               data=self.data,
+                                               button_styles=self.button_styles,
+                                               fnt_main=self.fnt_main)
 
     def show_frame(self, framename):
         self.frames[framename].tkraise()
@@ -195,12 +128,10 @@ class MainLayout(tk.Frame):
                 os.path.join(directory, '.note_manager', 'settings.json')):
             self.data["current_area"] = directory
             self.widgets["statusbar"]["lbl_status"].config(text=directory)
+            self.frames["managepage"].fill_folders()
             return directory
         showwarning("Warning", "This area is not managed\nPlease select another")
         return None
-
-
-
 
 # TODO: Will have to come back to this as it does not appear on the task bar after do this, so the app disappears
 
