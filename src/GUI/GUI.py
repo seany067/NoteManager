@@ -7,6 +7,7 @@ class GraphicalUserInterface(tk.Tk, threading.Thread):
     def __init__(self, manager, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
         tk.Tk.__init__(self, *args, **kwargs)
+        self.minsize(710, 470)
         self.manager = manager
         self.current_frame = None
 

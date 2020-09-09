@@ -17,7 +17,7 @@ def is_managed(func):
 
 def is_area(func):
     def wrapper(*args, **kwargs):
-        area = kwargs['area'] if 'area' in kwargs else args[0]
+        area = kwargs['area'] if 'area' in kwargs else args[1]
         if os.path.exists(area) and os.path.isdir(area):
             return func(*args, **kwargs)
         else:
@@ -35,6 +35,12 @@ class DirectoryManager(object):
 
     def __init__(self, cli=False):
         self.cli = cli
+
+    @is_area
+    @is_managed
+    def get_folders(self, area):
+        settings = self._get_settings(area)
+        return [folder for folder, values in settings["folders"].items()]
 
     @is_area
     @is_managed
