@@ -105,6 +105,13 @@ class DirectoryManager(object):
         settings["folders"][folder] = new_folder
         self._write_settings(area=area, settings=settings)
 
+
+    @is_managed
+    @is_folder
+    def get_files(self, area, folder):
+        path = os.path.join(area, folder)
+        return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+
     @is_managed
     @is_folder
     def get_folder_info(self, area, folder):
@@ -129,8 +136,15 @@ class DirectoryManager(object):
 
     @is_managed
     @is_folder
-    def get_tags(self, area, folder, tags):
+    def get_tags(self, area, folder):
         return self._get_settings(area=area)["folders"][folder]["tags"]
+
+    @is_managed
+    @is_folder
+    def remove_tag(self, area, folder, tag):
+        tags = set(self.get_tags(area=area, folder=folder))
+        tags.remove(tag)
+        self.set_tags(area=area, folder=folder, tags=list(tags))
 
     @is_area
     def new_area(self, area):

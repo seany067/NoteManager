@@ -1,6 +1,5 @@
 import tkinter as tk
 from .CustomWidgets import MarkdownEditor
-from ..Directories import DirectoryManager
 
 
 class ManagePage(tk.Frame):
@@ -56,41 +55,33 @@ class ManagePage(tk.Frame):
                                    )
         self.frm_fldmng.columnconfigure(0, weight=1)
         self.frm_fldmng.columnconfigure(1, weight=1)
+        self.frm_fldmng.columnconfigure(2, weight=1)
         self.frm_fldmng.rowconfigure(0, weight=1)
-        self.frm_fldmng.rowconfigure(1, weight=1)
         self.frm_fldmng.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
-        self.lbl_text2 = tk.Label(
+        self.frm_foldertags = tk.Frame(
             master=self.frm_fldmng,
-            text="Hello there",
             background=self.colours["main"],
-            font=self.fnt_main,
+            borderwidth=1,
+            relief=tk.RIDGE,
         )
-        self.lbl_text2.grid(row=0, column=0, sticky="nsew")
+        self.frm_foldertags.grid(row=0, column=0, sticky="nsew")
 
-        self.lbl_text3 = tk.Label(
+        self.frm_fldinfo = tk.Frame(
             master=self.frm_fldmng,
-            text="Hello there",
             background=self.colours["main"],
-            font=self.fnt_main,
+            borderwidth=1,
+            relief=tk.RIDGE,
         )
-        self.lbl_text3.grid(row=0, column=1, sticky="nsew")
+        self.frm_fldinfo.grid(row=0, column=2, sticky="nsew")
 
-        self.lbl_text4 = tk.Label(
+        self.frm_files = tk.Frame(
             master=self.frm_fldmng,
-            text="Hello there",
             background=self.colours["main"],
-            font=self.fnt_main,
+            borderwidth=1,
+            relief=tk.RIDGE,
         )
-        self.lbl_text4.grid(row=1, column=1, sticky="nsew")
-
-        self.lbl_text5 = tk.Label(
-            master=self.frm_fldmng,
-            text="Hello there",
-            background=self.colours["main"],
-            font=self.fnt_main,
-        )
-        self.lbl_text5.grid(row=1, column=0, sticky="nsew")
+        self.frm_files.grid(row=0, column=1, sticky="nsew")
 
         self.grid(row=0, column=0, sticky="nsew")
 
@@ -105,10 +96,98 @@ class ManagePage(tk.Frame):
         index = widget.curselection()[0]
         folder = widget.get(index)
         self.fill_folder_info(folder=folder)
+        self.fill_tags(folder=folder)
+        self.fill_files(folder=folder)
+
+    def fill_tags(self, folder):
+        data = self.state.manager.get_folder_info(area=self.state.current_area, folder=folder)
+        for widget in self.frm_foldertags.winfo_children():
+            widget.destroy()
+        if data is not None:
+            for tag in data["tags"]:
+                frm_label = tk.Frame(master=self.frm_foldertags,
+                                     background=self.colours["main"],
+                                     relief=tk.RIDGE
+                                     )
+                frm_label.pack(fill=tk.X, side=tk.TOP, expand=False)
+                label = tk.Label(
+                    master=frm_label,
+                    text=tag,
+                    background=self.colours["main"],
+                    foreground=self.colours["text"],
+                    font=self.fnt_main,
+                )
+                label.pack(fill=tk.Y, side=tk.LEFT, expand=False)
+
+                btn = tk.Button(
+                    master=frm_label,
+                    text="Remove",
+                    **self.button_styles,
+                    command=lambda: self.remove_tag(folder=folder, tag=tag),
+                )
+                btn.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
 
     def fill_folder_info(self, folder):
         data = self.state.manager.get_folder_info(area=self.state.current_area, folder=folder)
-        self.lbl_text2.configure(text=data["tags"])
+        for widget in self.frm_fldinfo.winfo_children():
+            widget.destroy()
+        if data is not None:
+            for type, value in data.items():
+                if type == "tags":
+                    continue
+                else:
+                    frm_label = tk.Frame(master=self.frm_fldinfo,
+                                         background=self.colours["main"],
+                                         relief=tk.RIDGE
+                                         )
+                    frm_label.pack(fill=tk.X, side=tk.TOP, expand=False)
+                    lbl_type = tk.Label(
+                        master=frm_label,
+                        text=type,
+                        background=self.colours["main"],
+                        foreground=self.colours["text"],
+                        font=self.fnt_main,
+                    )
+                    lbl_type.pack(fill=tk.Y, side=tk.LEFT, expand=False)
+
+                    lbl_value = tk.Label(
+                        master=frm_label,
+                        text=value,
+                        background=self.colours["main"],
+                        foreground=self.colours["text"],
+                        font=self.fnt_main,
+                    )
+                    lbl_value.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
+
+    def fill_files(self, folder):
+        for widget in self.frm_files.winfo_children():
+            widget.destroy()
+        for file in self.state.manager.get_files(area=self.state.current_area, folder=folder):
+            frm_file = tk.Frame(
+                master=self.frm_files,
+                background=self.colours["main"],
+                relief=tk.RIDGE
+            )
+            frm_file.pack(fill=tk.X, side=tk.TOP, expand=False)
+            lbl_file = tk.Label(
+                master=frm_file,
+                text=file,
+                background=self.colours["main"],
+                foreground=self.colours["text"],
+                font=self.fnt_main,
+            )
+            lbl_file.pack(fill=tk.Y, side=tk.LEFT, expand=False)
+            btn_load = tk.Button(
+                master=frm_file,
+                text="Open",
+                **self.button_styles,
+                command=""
+            )
+            btn_load.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
+
+    def remove_tag(self, folder, tag):
+        self.state.manager.remove_tag(area=self.state.current_area, folder=folder, tag=tag)
+        self.fill_folder_info(folder=folder)
 
 
 class EditPage(tk.Frame):
@@ -131,11 +210,16 @@ class EditPage(tk.Frame):
                                highlightthickness=1,
                                relief=tk.RIDGE,
                                )
+        frm_buttons.grid(row=0, column=0, sticky="ns", )
         btn_save = tk.Button(master=frm_buttons, text="Save",
                              **self.button_styles
                              )
-        btn_save.grid(row=0, column=0, sticky="ew")
-        frm_buttons.grid(row=0, column=0, sticky="ns", )
+        btn_save.pack(fill=tk.X, side=tk.TOP, expand=False)
+
+        btn_saveas = tk.Button(master=frm_buttons, text="New Save",
+                               **self.button_styles
+                               )
+        btn_saveas.pack(fill=tk.X, side=tk.TOP, expand=False)
 
         frm_textarea = tk.Frame(master=self,
                                 background=self.colours["main"],
