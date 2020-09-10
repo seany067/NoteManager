@@ -31,7 +31,7 @@ def is_folder(func):
         area = kwargs['area'] if 'area' in kwargs else args[1]
         folder = kwargs['folder'] if 'folder' in kwargs else args[2]
         folder_full = os.path.join(area, folder)
-        if os.path.exists(folder) and os.path.isdir(folder_full):
+        if os.path.exists(folder_full) and os.path.isdir(folder_full):
             return func(*args, **kwargs)
         else:
             print("This area does not exists")
@@ -104,6 +104,12 @@ class DirectoryManager(object):
         settings = self._get_settings(area)
         settings["folders"][folder] = new_folder
         self._write_settings(area=area, settings=settings)
+
+    @is_managed
+    @is_folder
+    def get_folder_info(self, area, folder):
+        settings = self._get_settings(area)
+        return settings["folders"][folder]
 
     @is_managed
     @is_folder

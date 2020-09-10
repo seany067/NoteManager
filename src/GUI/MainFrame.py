@@ -6,7 +6,6 @@ from tkinter.messagebox import showwarning
 from .CustomFrames import ManagePage, EditPage
 
 
-# TODO: Make usre all widgets are added to widgets dictoinary, or not depending on if I decide that this is needed
 class MainLayout(tk.Frame):
     colours = {
         "border": '#3B3B3B',
@@ -24,7 +23,7 @@ class MainLayout(tk.Frame):
 
     frames = {}
 
-    def __init__(self, parent, controller, data):
+    def __init__(self, parent, controller, state):
         self.fnt_main = tkFont.Font(root=controller, family="Arial", size=11)
         self.button_styles = {
             "background": self.colours["border"],
@@ -37,7 +36,7 @@ class MainLayout(tk.Frame):
         }
         self.parent = parent
         self.controller = controller
-        self.data = data
+        self.state = state
         tk.Frame.__init__(self, master=parent)
 
         self.content_frame = tk.Frame(
@@ -95,7 +94,7 @@ class MainLayout(tk.Frame):
                                  relief=tk.RIDGE,
                                  )
         lbl_status = tk.Label(master=frm_statusbar,
-                              text="Current Area: {}".format(self.data["current_area"]),
+                              text="Current Area: {}".format(self.state.current_area),
                               background=self.colours["border"],
                               foreground=self.colours["text"],
                               font=self.fnt_main
@@ -107,12 +106,12 @@ class MainLayout(tk.Frame):
     def build_pages(self):
         self.frames["editpage"] = EditPage(parent=self.content_frame,
                                            colours=self.colours,
-                                           data=self.data,
+                                           state=self.state,
                                            button_styles=self.button_styles,
                                            fnt_main=self.fnt_main)
         self.frames["managepage"] = ManagePage(parent=self.content_frame,
                                                colours=self.colours,
-                                               data=self.data,
+                                               state=self.state,
                                                button_styles=self.button_styles,
                                                fnt_main=self.fnt_main)
 
@@ -124,9 +123,10 @@ class MainLayout(tk.Frame):
             initialdir="/",
             title="Select a File",
         )
+        print(os.path.exists(os.path.join(directory, '.note_manager', 'settings.json')))
         if os.path.exists(os.path.join(directory, '.note_manager', 'settings.json')) and os.path.isfile(
                 os.path.join(directory, '.note_manager', 'settings.json')):
-            self.data["current_area"] = directory
+            self.state.current_area = directory
             self.widgets["statusbar"]["lbl_status"].config(text=directory)
             self.frames["managepage"].fill_folders()
             return directory
