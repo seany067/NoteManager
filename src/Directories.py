@@ -49,17 +49,27 @@ class DirectoryManager(object):
     def __init__(self, cli=False):
         self.cli = cli
 
+    @is_folder
+    def check_save(self, area, folder, file, data):
+        with open(os.path.join(area, folder, file), 'r') as f:
+            read = f.read()
+            suc = read.rstrip("\n") == data.rstrip("\n")
+        return suc
+
+    @is_folder
+    def get_file_content(self, area, folder, file):
+        with open(os.path.join(area, folder, file), "r+") as f:
+            data = f.read()
+        return data
+
     @is_managed
     def get_folders(self, area):
         settings = self._get_settings(area)
         return [folder for folder, values in settings["folders"].items()]
 
     @is_managed
-    def move(self, area, file):
+    def find_folder(self, area, data):
         settings = self._get_settings(area)
-
-        with open(file, 'r') as f:
-            data = f.read()
 
         # Regex to count tag occurrences
         totals = {}
@@ -78,17 +88,51 @@ class DirectoryManager(object):
                 print(('{0}:' + '#' * round(values / average)).format(folders))
 
         # Finds the folder with the highest number of matching tags
-        highest = (None, None)
+        highest = (None, 0)
         for key, value in totals.items():
             if value > highest[1]:
                 highest = (key, value)
 
         if highest[0] is None:
             print("None of the folders had matching tags, please move file manually")
-            return
+            return None
+        return highest[0]
+
+    @is_managed
+    def check_file_collision(self, area, folder, filename):
+        return os.path.exists(os.path.join(area, folder, filename)) and os.path.isfile(os.path.join(area, folder, filename))
+
+    @is_managed
+    def new_save_file(self, area, filename, filecontent):
+        folder = self.find_folder(area=area, data=filecontent)
+        if self.check_file_collision(area=area, folder=folder, filename=filename):
+            return False, "File already exists"
+        with open(os.path.join(area, folder, filename), 'w+') as f:
+            f.write(filecontent)
+        return True, "Successfully saved", filename, folder
+
+    @is_managed
+    def save_file(self, area, folder, filename, filecontent):
+        with open(os.path.join(area, folder, filename), 'w+') as f:
+            f.write(filecontent)
+        return True, "Successfully updated", filename, folder
+
+    @is_managed
+    def move(self, area, file):
+        with open(file, 'r') as f:
+            data = f.read()
+
+        folder = self.find_folder(area=area, data=data)
+        filename = ntpath.basename(file)
+        outcome = self.check_file_collision(area=area, folder=folder, filename=filename)
 
         # This should move the file
-        os.rename(file, os.path.join(area, highest[0], ntpath.basename(file)))
+        if outcome:
+            print("A file with this name already exists\n Please rename the file")
+            return outcome
+        else:
+            os.rename(file, os.path.join(area, folder, filename))
+            return outcome
 
     @is_managed
     def add_folder(self, area, folder, tags):
@@ -104,7 +148,6 @@ class DirectoryManager(object):
         settings = self._get_settings(area)
         settings["folders"][folder] = new_folder
         self._write_settings(area=area, settings=settings)
-
 
     @is_managed
     @is_folder

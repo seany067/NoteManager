@@ -54,18 +54,20 @@ class MainLayout(tk.Frame):
         self.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
 
     def build_menubar(self):
-        frm_menubar = tk.Frame(master=self,
-                               background=self.colours["border"],
-                               highlightthickness=1,
-                               relief=tk.RIDGE,
-                               )
+        frm_menubar = tk.Frame(
+            master=self,
+            background=self.colours["border"],
+            highlightthickness=1,
+            relief=tk.RIDGE,
+        )
         self.widgets["menubar"]["frm_menubar"] = frm_menubar
 
-        btn_openarea = tk.Button(master=frm_menubar,
-                                 text="Select area",
-                                 command=self.browseFiles,
-                                 **self.button_styles,
-                                 )
+        btn_openarea = tk.Button(
+            master=frm_menubar,
+            text="Select area",
+            command=self.browseFiles,
+            **self.button_styles,
+        )
 
         btn_openarea.pack(fill=tk.X, side=tk.LEFT, expand=False)
         self.widgets["menubar"]["btn_openarea"] = btn_openarea
@@ -104,16 +106,20 @@ class MainLayout(tk.Frame):
         frm_statusbar.pack(fill=tk.X, side=tk.TOP, expand=False)
 
     def build_pages(self):
-        self.frames["editpage"] = EditPage(parent=self.content_frame,
-                                           colours=self.colours,
-                                           state=self.state,
-                                           button_styles=self.button_styles,
-                                           fnt_main=self.fnt_main)
-        self.frames["managepage"] = ManagePage(parent=self.content_frame,
-                                               colours=self.colours,
-                                               state=self.state,
-                                               button_styles=self.button_styles,
-                                               fnt_main=self.fnt_main)
+        self.frames["editpage"] = EditPage(
+            parent=self.content_frame,
+            mainframe=self,
+            colours=self.colours,
+            state=self.state,
+            button_styles=self.button_styles,
+            fnt_main=self.fnt_main)
+        self.frames["managepage"] = ManagePage(
+            parent=self.content_frame,
+            mainframe=self,
+            colours=self.colours,
+            state=self.state,
+            button_styles=self.button_styles,
+            fnt_main=self.fnt_main)
 
     def show_frame(self, framename):
         self.frames[framename].tkraise()
@@ -132,6 +138,11 @@ class MainLayout(tk.Frame):
             return directory
         showwarning("Warning", "This area is not managed\nPlease select another")
         return None
+
+    def open_file(self, area, folder, file):
+        self.frames["editpage"].open_file(area=area, folder=folder, file=file)
+        self.frames["editpage"].tkraise()
+
 
 # TODO: Will have to come back to this as it does not appear on the task bar after do this, so the app disappears
 

@@ -1,13 +1,17 @@
 import tkinter as tk
+from tkinter import messagebox
 from .CustomWidgets import MarkdownEditor
+import copy
 
 
 class ManagePage(tk.Frame):
-    def __init__(self, parent, colours, state, button_styles, fnt_main, *args, **kwargs):
+    def __init__(self, parent, mainframe, colours, state, button_styles, fnt_main, *args, **kwargs):
         self.colours = colours
         self.button_styles = button_styles
         self.fnt_main = fnt_main
         self.state = state
+        self.parent = parent
+        self.mainframe = mainframe
         tk.Frame.__init__(self,
                           master=parent,
                           width=800,
@@ -159,10 +163,18 @@ class ManagePage(tk.Frame):
                     )
                     lbl_value.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
 
+    def open_file(self, folder, file):
+        print(file)
+        self.mainframe.open_file(area=self.state.current_area, folder=folder, file=file)
+
     def fill_files(self, folder):
         for widget in self.frm_files.winfo_children():
             widget.destroy()
-        for file in self.state.manager.get_files(area=self.state.current_area, folder=folder):
+        files = self.state.manager.get_files(area=self.state.current_area, folder=folder)[:]
+        for i in range(0, len(self.state.manager.get_files(area=self.state.current_area, folder=folder)[:])):
+            filename = files[i]
+            foldername = copy.deepcopy(folder)
+
             frm_file = tk.Frame(
                 master=self.frm_files,
                 background=self.colours["main"],
@@ -171,17 +183,18 @@ class ManagePage(tk.Frame):
             frm_file.pack(fill=tk.X, side=tk.TOP, expand=False)
             lbl_file = tk.Label(
                 master=frm_file,
-                text=file,
+                text=filename,
                 background=self.colours["main"],
                 foreground=self.colours["text"],
                 font=self.fnt_main,
             )
+
             lbl_file.pack(fill=tk.Y, side=tk.LEFT, expand=False)
             btn_load = tk.Button(
                 master=frm_file,
                 text="Open",
                 **self.button_styles,
-                command=""
+                command=lambda filename=filename, foldername=foldername: self.open_file(file=filename, folder=foldername),
             )
             btn_load.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
 
@@ -191,11 +204,12 @@ class ManagePage(tk.Frame):
 
 
 class EditPage(tk.Frame):
-    def __init__(self, parent, colours, state, button_styles, fnt_main, *args, **kwargs):
+    def __init__(self, parent, mainframe, colours, state, button_styles, fnt_main, *args, **kwargs):
         self.colours = colours
         self.button_styles = button_styles
         self.fnt_main = fnt_main
         self.state = state
+        self.mainframe = mainframe
         tk.Frame.__init__(self,
                           master=parent,
                           width=800,
@@ -211,38 +225,155 @@ class EditPage(tk.Frame):
                                relief=tk.RIDGE,
                                )
         frm_buttons.grid(row=0, column=0, sticky="ns", )
-        btn_save = tk.Button(master=frm_buttons, text="Save",
-                             **self.button_styles
-                             )
-        btn_save.pack(fill=tk.X, side=tk.TOP, expand=False)
-
-        btn_saveas = tk.Button(master=frm_buttons, text="New Save",
-                               **self.button_styles
-                               )
-        btn_saveas.pack(fill=tk.X, side=tk.TOP, expand=False)
 
         frm_textarea = tk.Frame(master=self,
                                 background=self.colours["main"],
                                 )
         frm_textarea.grid(row=0, column=1, sticky="nsew")
 
-        txt_area = MarkdownEditor(master=frm_textarea,
-                                  background=self.colours["main"],
-                                  foreground=self.colours["text"],
-                                  font=self.fnt_main,
-                                  borderwidth=1,
-                                  relief=tk.SUNKEN,
-                                  padx=5,
-                                  pady=5,
-                                  )
-        txt_area.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
+        self.txt_area = MarkdownEditor(
+            master=frm_textarea,
+            background=self.colours["main"],
+            foreground=self.colours["text"],
+            font=self.fnt_main,
+            borderwidth=1,
+            relief=tk.SUNKEN,
+            padx=5,
+            pady=5,
+        )
+        self.txt_area.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
         vsb_area = tk.Scrollbar(
             master=frm_textarea,
             orient="vertical",
             borderwidth=1,
-            command=txt_area.yview)
+            command=self.txt_area.yview)
         vsb_area.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
-        txt_area.configure(yscrollcommand=vsb_area.set)
+        self.txt_area.configure(yscrollcommand=vsb_area.set)
+
+        btn_save = tk.Button(
+            master=frm_buttons,
+            text="Save",
+            **self.button_styles,
+            command=lambda data=self.txt_area.get("1.0", tk.END): self.quick_save_file(data=data)
+        )
+        btn_save.pack(fill=tk.X, side=tk.TOP, expand=False)
+
+        btn_saveas = tk.Button(
+            master=frm_buttons,
+            text="New Save",
+            **self.button_styles,
+            command=self.save_as_pop,
+        )
+        btn_saveas.pack(fill=tk.X, side=tk.TOP, expand=False)
 
         self.grid(row=0, column=0, sticky="nsew")
+
+    def save_as_pop(self):
+        window = tk.Toplevel()
+        window.grid_rowconfigure(0, weight=1)
+        window.grid_columnconfigure(0, weight=1)
+        window.grid_rowconfigure(1, weight=1)
+        window.grid_columnconfigure(1, weight=1)
+        window.geometry("250x100")
+        window.title("Save As")
+        window.configure(background=self.colours["main"])
+        window.grab_set()
+
+        lbl_filename = tk.Label(
+            master=window,
+            text="Filename:",
+            background=self.colours["main"],
+            foreground=self.colours["text"],
+            font=self.fnt_main,
+        )
+        lbl_filename.grid(row=0, column=0, sticky="e")
+
+        ent_filename = tk.Entry(
+            master=window,
+            font=self.fnt_main,
+            background=self.colours["main"],
+            foreground=self.colours["text"],
+        )
+        ent_filename.grid(row=0, column=1, sticky="w")
+
+        btn_cancel = tk.Button(
+            master=window,
+            **self.button_styles,
+            text="Cancel",
+            command=window.destroy,
+        )
+        btn_cancel.grid(row=1, column=0, sticky="e")
+
+        def save_button():
+            self.new_save_file(name=ent_filename.get(), data=self.txt_area.get("1.0", tk.END))
+            window.destroy()
+
+        btn_cancel = tk.Button(
+            master=window,
+            **self.button_styles,
+            text="Save",
+            command=save_button,
+        )
+        btn_cancel.grid(row=1, column=1, sticky="w")
+
+    def new_save_file(self, data, name):
+        # Save file to folder
+        if self.state.current_area is None:
+            tk.messagebox.showerror(title="Error", message="Please select an area first")
+            return
+        outcome = self.state.manager.new_save_file(
+            area=self.state.current_area,
+            filename=name,
+            filecontent=data
+        )
+        if outcome[0]:
+            tk.messagebox.showinfo(title="Success", message=outcome[1])
+            self.state.current_file = outcome[2]
+            self.state.current_folder = outcome[3]
+        else:
+            tk.messagebox.showerror(title="Error", message=outcome[1])
+
+    def quick_save_file(self, data):
+        # Update currently open file
+        if self.state.current_area is None:
+            tk.messagebox.showerror(title="Error", message="Please select an area first")
+            return
+        if self.state.current_file is None:
+            return self.save_as_pop()
+        outcome = self.state.manager.save_file(
+            area=self.state.current_area,
+            folder=self.state.current_folder,
+            filename=self.state.current_file,
+            filecontent=data
+        )
+        if outcome[0]:
+            tk.messagebox.showinfo(title="Success", message=outcome[1])
+            self.state.current_file = outcome[2]
+            self.state.current_folder = outcome[3]
+        else:
+            tk.messagebox.showerror(title="Error", message=outcome[1])
+
+    def manual_save_file(self, data):
+        # Manually save the file using the windows file explorer
+        pass
+
+    def check_save(self, data):
+        return self.state.manager.check_save(area=self.state.current_area, folder=self.state.current_folder,
+                                             file=self.state.current_file, data=data)
+
+    def open_file(self, area, folder, file):
+        if self.state.current_file and not self.check_save(data=self.txt_area.get("1.0", tk.END)):
+            result = tk.messagebox.askyesnocancel("Save", "Would you like to save changes to the currently open file?")
+            if result:
+                self.quick_save_file(data=self.txt_area.get("1.0", tk.END))
+            elif result is None:
+                return
+        print(area, folder, file)
+        data = self.state.manager.get_file_content(area, folder, file)
+        print(data)
+        self.txt_area.delete("1.0", tk.END)
+        print("data:", data)
+        self.txt_area.insert("1.0", data)
+        self.state.current_folder = folder
+        self.state.current_file = file
