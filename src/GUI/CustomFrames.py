@@ -35,36 +35,36 @@ class ManagePage(tk.Frame):
         self.fill_folders()
         self.lb_folders.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
 
-        self.frm_fldbtns = tk.Frame(master=self.frm_fldexp)
-        self.frm_fldbtns.rowconfigure(0, weight=1)
-        self.frm_fldbtns.columnconfigure(1, weight=1)
-        self.frm_fldbtns.pack(fill=tk.X, side=tk.TOP, expand=False)
+        frm_fldbtns = tk.Frame(master=self.frm_fldexp)
+        frm_fldbtns.rowconfigure(0, weight=1)
+        frm_fldbtns.columnconfigure(1, weight=1)
+        frm_fldbtns.pack(fill=tk.X, side=tk.TOP, expand=False)
 
-        self.btn_newarea = tk.Button(master=self.frm_fldbtns,
-                                     text="New Area",
-                                     command="",
-                                     **self.button_styles)
-        self.btn_newarea.grid(row=1, column=0, sticky="ew")
+        btn_newarea = tk.Button(master=frm_fldbtns,
+                                text="New Area",
+                                command="",
+                                **self.button_styles)
+        btn_newarea.grid(row=1, column=0, sticky="ew")
 
-        self.btn_newfolder = tk.Button(master=self.frm_fldbtns,
-                                       text="Add Folder",
-                                       command="",
-                                       **self.button_styles)
-        self.btn_newfolder.grid(row=1, column=1, sticky="ew")
+        btn_newfolder = tk.Button(master=frm_fldbtns,
+                                  text="Add Folder",
+                                  command="",
+                                  **self.button_styles)
+        btn_newfolder.grid(row=1, column=1, sticky="ew")
 
         # Right hand side
 
-        self.frm_fldmng = tk.Frame(master=self,
-                                   background=self.colours["main"]
-                                   )
-        self.frm_fldmng.columnconfigure(0, weight=1)
-        self.frm_fldmng.columnconfigure(1, weight=1)
-        self.frm_fldmng.columnconfigure(2, weight=1)
-        self.frm_fldmng.rowconfigure(0, weight=1)
-        self.frm_fldmng.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
+        frm_fldmng = tk.Frame(master=self,
+                              background=self.colours["main"]
+                              )
+        frm_fldmng.columnconfigure(0, weight=1)
+        frm_fldmng.columnconfigure(1, weight=1)
+        frm_fldmng.columnconfigure(2, weight=1)
+        frm_fldmng.rowconfigure(0, weight=1)
+        frm_fldmng.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
         self.frm_foldertags = tk.Frame(
-            master=self.frm_fldmng,
+            master=frm_fldmng,
             background=self.colours["main"],
             borderwidth=1,
             relief=tk.RIDGE,
@@ -72,7 +72,7 @@ class ManagePage(tk.Frame):
         self.frm_foldertags.grid(row=0, column=0, sticky="nsew")
 
         self.frm_fldinfo = tk.Frame(
-            master=self.frm_fldmng,
+            master=frm_fldmng,
             background=self.colours["main"],
             borderwidth=1,
             relief=tk.RIDGE,
@@ -80,7 +80,7 @@ class ManagePage(tk.Frame):
         self.frm_fldinfo.grid(row=0, column=2, sticky="nsew")
 
         self.frm_files = tk.Frame(
-            master=self.frm_fldmng,
+            master=frm_fldmng,
             background=self.colours["main"],
             borderwidth=1,
             relief=tk.RIDGE,
@@ -131,6 +131,14 @@ class ManagePage(tk.Frame):
                 )
                 btn.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
 
+            btn_newtag = tk.Button(
+                master=self.frm_foldertags,
+                text="Add tag",
+                **self.button_styles,
+                command=lambda folder=folder: self.add_tag(folder=folder)
+            )
+            btn_newtag.pack(fill=tk.X, side=tk.BOTTOM, expand=False)
+
     def fill_folder_info(self, folder):
         data = self.state.manager.get_folder_info(area=self.state.current_area, folder=folder)
         for widget in self.frm_fldinfo.winfo_children():
@@ -140,10 +148,11 @@ class ManagePage(tk.Frame):
                 if type == "tags":
                     continue
                 else:
-                    frm_label = tk.Frame(master=self.frm_fldinfo,
-                                         background=self.colours["main"],
-                                         relief=tk.RIDGE
-                                         )
+                    frm_label = tk.Frame(
+                        master=self.frm_fldinfo,
+                        background=self.colours["main"],
+                        relief=tk.RIDGE
+                    )
                     frm_label.pack(fill=tk.X, side=tk.TOP, expand=False)
                     lbl_type = tk.Label(
                         master=frm_label,
@@ -194,13 +203,69 @@ class ManagePage(tk.Frame):
                 master=frm_file,
                 text="Open",
                 **self.button_styles,
-                command=lambda filename=filename, foldername=foldername: self.open_file(file=filename, folder=foldername),
+                command=lambda filename=filename, foldername=foldername: self.open_file(file=filename,
+                                                                                        folder=foldername),
             )
             btn_load.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
 
     def remove_tag(self, folder, tag):
         self.state.manager.remove_tag(area=self.state.current_area, folder=folder, tag=tag)
         self.fill_folder_info(folder=folder)
+
+    def add_tag(self, folder):
+        tag = self.new_tag_popup_window()
+        if tag is not None:
+            self.state.manager.add_tags(area=self.state.current_area, folder=folder, tags=tag)
+            self.fill_folder_info(folder=folder)
+
+    def new_tag_popup_window(self):
+        window = tk.Toplevel()
+        window.grid_rowconfigure(0, weight=1)
+        window.grid_columnconfigure(0, weight=1)
+        window.grid_rowconfigure(1, weight=1)
+        window.grid_columnconfigure(1, weight=1)
+        window.geometry("250x100")
+        window.title("New Tag")
+        window.configure(background=self.colours["main"])
+        # window.grab_set()
+
+        lbl_filename = tk.Label(
+            master=window,
+            text="Tag:",
+            background=self.colours["main"],
+            foreground=self.colours["text"],
+            font=self.fnt_main,
+        )
+        lbl_filename.grid(row=0, column=0, sticky="e")
+
+        data = tk.StringVar()
+        ent_tag = tk.Entry(
+            master=window,
+            font=self.fnt_main,
+            background=self.colours["main"],
+            foreground=self.colours["text"],
+            textvariable=data
+        )
+        ent_tag.grid(row=0, column=1, sticky="w")
+
+        btn_cancel = tk.Button(
+            master=window,
+            **self.button_styles,
+            text="Cancel",
+            command=window.destroy,
+        )
+        btn_cancel.grid(row=1, column=0, sticky="e")
+
+        btn_add = tk.Button(
+            master=window,
+            **self.button_styles,
+            text="Add Tag",
+            command=window.destroy
+        )
+        btn_add.grid(row=1, column=1, sticky="w")
+
+        window.wait_window()
+        return data.get()
 
 
 class EditPage(tk.Frame):
@@ -369,11 +434,8 @@ class EditPage(tk.Frame):
                 self.quick_save_file(data=self.txt_area.get("1.0", tk.END))
             elif result is None:
                 return
-        print(area, folder, file)
         data = self.state.manager.get_file_content(area, folder, file)
-        print(data)
         self.txt_area.delete("1.0", tk.END)
-        print("data:", data)
         self.txt_area.insert("1.0", data)
         self.state.current_folder = folder
         self.state.current_file = file

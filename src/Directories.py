@@ -165,7 +165,7 @@ class DirectoryManager(object):
     @is_folder
     def add_tags(self, area, folder, tags):
         settings = self._get_settings(area=area)
-        settings["folders"][folder]["tags"] += tags
+        settings["folders"][folder]["tags"] += [tags]
         settings["folders"][folder]["tags"] = list(set(settings["folders"][folder]["tags"]))  # Removes duplicates
         self._write_settings(area=area, settings=settings)
 
