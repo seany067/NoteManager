@@ -127,7 +127,7 @@ class ManagePage(tk.Frame):
                     master=frm_label,
                     text="Remove",
                     **self.button_styles,
-                    command=lambda: self.remove_tag(folder=folder, tag=tag),
+                    command=lambda folder=folder, tag=tag: self.remove_tag(folder=folder, tag=tag),
                 )
                 btn.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
 
