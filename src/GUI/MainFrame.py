@@ -62,17 +62,25 @@ class MainLayout(tk.Frame):
         )
         self.widgets["menubar"]["frm_menubar"] = frm_menubar
 
+        btn_newarea = tk.Button(
+            master=frm_menubar,
+            text="New Area",
+            command=self.new_area,
+            **self.button_styles
+        )
+        btn_newarea.pack(fill=tk.X, side=tk.LEFT, expand=False)
+
         btn_openarea = tk.Button(
             master=frm_menubar,
             text="Select area",
-            command=self.browseFiles,
+            command=self.browse_areas,
             **self.button_styles,
         )
-
         btn_openarea.pack(fill=tk.X, side=tk.LEFT, expand=False)
+
         self.widgets["menubar"]["btn_openarea"] = btn_openarea
         btn_manageframe = tk.Button(master=frm_menubar,
-                                    text="Manage Areas",
+                                    text="Manage Area",
                                     command=lambda: self.show_frame("managepage"),
                                     **self.button_styles,
                                     )
@@ -124,25 +132,41 @@ class MainLayout(tk.Frame):
     def show_frame(self, framename):
         self.frames[framename].tkraise()
 
-    def browseFiles(self):
+    def browse_areas(self):
         directory = tk.filedialog.askdirectory(
             initialdir="/",
-            title="Select a File",
+            title="Select a Directory",
         )
-        print(os.path.exists(os.path.join(directory, '.note_manager', 'settings.json')))
         if os.path.exists(os.path.join(directory, '.note_manager', 'settings.json')) and os.path.isfile(
                 os.path.join(directory, '.note_manager', 'settings.json')):
             self.state.current_area = directory
             self.widgets["statusbar"]["lbl_status"].config(text=directory)
             self.frames["managepage"].fill_folders()
             return directory
-        showwarning("Warning", "This area is not managed\nPlease select another")
+        if directory:
+            showwarning("Warning", "This area is not managed\nPlease select another")
+        return None
+
+    def new_area(self):
+        directory = tk.filedialog.askdirectory(
+            initialdir="/",
+            title="Select a Directory",
+        )
+        if not directory:
+            return
+        if not os.path.exists(os.path.join(directory, '.note_manager', 'settings.json')) and not \
+                os.path.isfile(os.path.join(directory, '.note_manager', 'settings.json')):
+            self.state.manager.new_area(directory)
+            self.state.current_area = directory
+            self.widgets["statusbar"]["lbl_status"].config(text=directory)
+            self.frames["managepage"].fill_folders()
+            return directory
+        showwarning("Warning", "This area is already managed\nPlease select another")
         return None
 
     def open_file(self, area, folder, file):
         self.frames["editpage"].open_file(area=area, folder=folder, file=file)
         self.frames["editpage"].tkraise()
-
 
 # TODO: Will have to come back to this as it does not appear on the task bar after do this, so the app disappears
 

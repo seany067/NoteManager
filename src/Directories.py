@@ -103,18 +103,24 @@ class DirectoryManager(object):
         return os.path.exists(os.path.join(area, folder, filename)) and os.path.isfile(os.path.join(area, folder, filename))
 
     @is_managed
+    def check_folder_collision(self, area, folder):
+        return os.path.exists(os.path.join(area, folder)) and os.path.isdir(os.path.join(area, folder))
+
+    @is_managed
     def new_save_file(self, area, filename, filecontent):
         folder = self.find_folder(area=area, data=filecontent)
+        if folder is None:
+            return False, "No associated folders, please manually save"
         if self.check_file_collision(area=area, folder=folder, filename=filename):
             return False, "File already exists"
         with open(os.path.join(area, folder, filename), 'w+') as f:
-            f.write(filecontent)
+            f.write(filecontent.strip())
         return True, "Successfully saved", filename, folder
 
     @is_managed
     def save_file(self, area, folder, filename, filecontent):
         with open(os.path.join(area, folder, filename), 'w+') as f:
-            f.write(filecontent)
+            f.write(filecontent.strip())
         return True, "Successfully updated", filename, folder
 
     @is_managed
@@ -135,12 +141,11 @@ class DirectoryManager(object):
             return outcome
 
     @is_managed
-    def add_folder(self, area, folder, tags):
-        if not os.path.exists(os.path.join(area, folder)):
+    def add_folder(self, area, folder, tags=[]):
+        if not self.check_folder_collision(area=area, folder=folder):
             print("Creating new folder...")
-            os.mkdir(area, folder)
+            os.mkdir(os.path.join(area, folder))
             print("Folder created")
-
         new_folder = {
             'name': folder,
             'tags': tags,

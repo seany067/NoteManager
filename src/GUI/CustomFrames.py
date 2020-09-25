@@ -12,17 +12,20 @@ class ManagePage(tk.Frame):
         self.state = state
         self.parent = parent
         self.mainframe = mainframe
-        tk.Frame.__init__(self,
-                          master=parent,
-                          width=800,
-                          height=800,
-                          background=self.colours["main"], *args, **kwargs)
+        tk.Frame.__init__(
+            self,
+            master=parent,
+            width=800,
+            height=800,
+            background=self.colours["main"], *args, **kwargs
+        )
 
         # Left hand side
 
-        self.frm_fldexp = tk.Frame(master=self,
-                                   background=self.colours["border"],
-                                   )
+        self.frm_fldexp = tk.Frame(
+            master=self,
+            background=self.colours["border"],
+        )
         self.frm_fldexp.pack(fill=tk.Y, side=tk.LEFT, expand=False)
 
         self.lb_folders = tk.Listbox(
@@ -40,16 +43,12 @@ class ManagePage(tk.Frame):
         frm_fldbtns.columnconfigure(1, weight=1)
         frm_fldbtns.pack(fill=tk.X, side=tk.TOP, expand=False)
 
-        btn_newarea = tk.Button(master=frm_fldbtns,
-                                text="New Area",
-                                command="",
-                                **self.button_styles)
-        btn_newarea.grid(row=1, column=0, sticky="ew")
-
-        btn_newfolder = tk.Button(master=frm_fldbtns,
-                                  text="Add Folder",
-                                  command="",
-                                  **self.button_styles)
+        btn_newfolder = tk.Button(
+            master=frm_fldbtns,
+            text="Add Folder",
+            command=self.add_folder,
+            **self.button_styles
+        )
         btn_newfolder.grid(row=1, column=1, sticky="ew")
 
         # Right hand side
@@ -57,9 +56,9 @@ class ManagePage(tk.Frame):
         frm_fldmng = tk.Frame(master=self,
                               background=self.colours["main"]
                               )
-        frm_fldmng.columnconfigure(0, weight=1)
-        frm_fldmng.columnconfigure(1, weight=1)
-        frm_fldmng.columnconfigure(2, weight=1)
+        frm_fldmng.columnconfigure(0, weight=1, uniform="group1")
+        frm_fldmng.columnconfigure(1, weight=1, uniform="group1")
+        frm_fldmng.columnconfigure(2, weight=1, uniform="group1")
         frm_fldmng.rowconfigure(0, weight=1)
         frm_fldmng.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
@@ -97,7 +96,10 @@ class ManagePage(tk.Frame):
 
     def on_select(self, event):
         widget = event.widget
-        index = widget.curselection()[0]
+        try:
+            index = widget.curselection()[0]
+        except IndexError:
+            return
         folder = widget.get(index)
         self.fill_folder_info(folder=folder)
         self.fill_tags(folder=folder)
@@ -173,7 +175,6 @@ class ManagePage(tk.Frame):
                     lbl_value.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
 
     def open_file(self, folder, file):
-        print(file)
         self.mainframe.open_file(area=self.state.current_area, folder=folder, file=file)
 
     def fill_files(self, folder):
@@ -214,9 +215,17 @@ class ManagePage(tk.Frame):
 
     def add_tag(self, folder):
         tag = self.new_tag_popup_window()
-        if tag is not None:
+        if tag:
             self.state.manager.add_tags(area=self.state.current_area, folder=folder, tags=tag)
             self.fill_folder_info(folder=folder)
+
+    def add_folder(self):
+        if self.state.current_area is None:
+            tk.messagebox.showerror("Select an area", "Please select an area to create a folder in")
+            return
+        foldername = self.new_folder_popup_window()
+        self.state.manager.add_folder(area=self.state.current_area, folder=foldername)
+        self.fill_folders()
 
     def new_tag_popup_window(self):
         window = tk.Toplevel()
@@ -227,7 +236,7 @@ class ManagePage(tk.Frame):
         window.geometry("250x100")
         window.title("New Tag")
         window.configure(background=self.colours["main"])
-        # window.grab_set()
+        window.grab_set()
 
         lbl_filename = tk.Label(
             master=window,
@@ -260,6 +269,55 @@ class ManagePage(tk.Frame):
             master=window,
             **self.button_styles,
             text="Add Tag",
+            command=window.destroy
+        )
+        btn_add.grid(row=1, column=1, sticky="w")
+
+        window.wait_window()
+        return data.get()
+
+    def new_folder_popup_window(self):
+        window = tk.Toplevel()
+        window.grid_rowconfigure(0, weight=1)
+        window.grid_columnconfigure(0, weight=1)
+        window.grid_rowconfigure(1, weight=1)
+        window.grid_columnconfigure(1, weight=1)
+        window.geometry("250x100")
+        window.title("New Folder")
+        window.configure(background=self.colours["main"])
+        window.grab_set()
+
+        lbl_filename = tk.Label(
+            master=window,
+            text="FolderName:",
+            background=self.colours["main"],
+            foreground=self.colours["text"],
+            font=self.fnt_main,
+        )
+        lbl_filename.grid(row=0, column=0, sticky="e")
+
+        data = tk.StringVar()
+        ent_folder = tk.Entry(
+            master=window,
+            font=self.fnt_main,
+            background=self.colours["main"],
+            foreground=self.colours["text"],
+            textvariable=data
+        )
+        ent_folder.grid(row=0, column=1, sticky="w")
+
+        btn_cancel = tk.Button(
+            master=window,
+            **self.button_styles,
+            text="Cancel",
+            command=window.destroy,
+        )
+        btn_cancel.grid(row=1, column=0, sticky="e")
+
+        btn_add = tk.Button(
+            master=window,
+            **self.button_styles,
+            text="Create folder",
             command=window.destroy
         )
         btn_add.grid(row=1, column=1, sticky="w")
@@ -305,6 +363,7 @@ class EditPage(tk.Frame):
             relief=tk.SUNKEN,
             padx=5,
             pady=5,
+            insertbackground='white'
         )
         self.txt_area.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
@@ -320,7 +379,7 @@ class EditPage(tk.Frame):
             master=frm_buttons,
             text="Save",
             **self.button_styles,
-            command=lambda data=self.txt_area.get("1.0", tk.END): self.quick_save_file(data=data)
+            command=self.quick_save_file
         )
         btn_save.pack(fill=tk.X, side=tk.TOP, expand=False)
 
@@ -331,6 +390,14 @@ class EditPage(tk.Frame):
             command=self.save_as_pop,
         )
         btn_saveas.pack(fill=tk.X, side=tk.TOP, expand=False)
+
+        btn_newfile = tk.Button(
+            master=frm_buttons,
+            text="New File",
+            **self.button_styles,
+            command=self.new_file,
+        )
+        btn_newfile.pack(fill=tk.X, side=tk.TOP, expand=False)
 
         self.grid(row=0, column=0, sticky="nsew")
 
@@ -399,7 +466,7 @@ class EditPage(tk.Frame):
         else:
             tk.messagebox.showerror(title="Error", message=outcome[1])
 
-    def quick_save_file(self, data):
+    def quick_save_file(self):
         # Update currently open file
         if self.state.current_area is None:
             tk.messagebox.showerror(title="Error", message="Please select an area first")
@@ -410,7 +477,7 @@ class EditPage(tk.Frame):
             area=self.state.current_area,
             folder=self.state.current_folder,
             filename=self.state.current_file,
-            filecontent=data
+            filecontent=self.txt_area.get("1.0", tk.END)
         )
         if outcome[0]:
             tk.messagebox.showinfo(title="Success", message=outcome[1])
@@ -423,15 +490,15 @@ class EditPage(tk.Frame):
         # Manually save the file using the windows file explorer
         pass
 
-    def check_save(self, data):
+    def check_save(self):
         return self.state.manager.check_save(area=self.state.current_area, folder=self.state.current_folder,
-                                             file=self.state.current_file, data=data)
+                                             file=self.state.current_file, data=self.txt_area.get("1.0", tk.END))
 
     def open_file(self, area, folder, file):
-        if self.state.current_file and not self.check_save(data=self.txt_area.get("1.0", tk.END)):
+        if self.state.current_file and not self.check_save():
             result = tk.messagebox.askyesnocancel("Save", "Would you like to save changes to the currently open file?")
             if result:
-                self.quick_save_file(data=self.txt_area.get("1.0", tk.END))
+                self.quick_save_file()
             elif result is None:
                 return
         data = self.state.manager.get_file_content(area, folder, file)
@@ -439,3 +506,16 @@ class EditPage(tk.Frame):
         self.txt_area.insert("1.0", data)
         self.state.current_folder = folder
         self.state.current_file = file
+
+    def new_file(self):
+        if self.txt_area.get("1.0", tk.END).strip():
+            if self.state.current_file and not self.check_save():
+                result = tk.messagebox.askyesnocancel("Save",
+                                                      "Would you like to save changes to the currently open file?")
+                if result:
+                    self.quick_save_file()
+                elif result is None:
+                    return
+        self.txt_area.delete("1.0", tk.END)
+        self.state.current_folder = None
+        self.state.current_file = None

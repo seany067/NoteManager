@@ -4,9 +4,8 @@ from .MainFrame import MainLayout
 from ..State import State
 
 
-class GraphicalUserInterface(tk.Tk, threading.Thread):
+class GraphicalUserInterface(tk.Tk):
     def __init__(self, manager, *args, **kwargs):
-        threading.Thread.__init__(self, *args, **kwargs)
         tk.Tk.__init__(self, *args, **kwargs)
         self.minsize(780, 480)
         self.state = State()
@@ -14,6 +13,3 @@ class GraphicalUserInterface(tk.Tk, threading.Thread):
         self.current_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self.title("NoteManager")
-
-    def run(self):
-        self.mainloop()
