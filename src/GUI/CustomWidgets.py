@@ -24,10 +24,8 @@ class MarkdownEditor(tk.Text):
         wordstart = self.index("{0} wordstart".format(self.index(wordend + "-1c")))
         word = self.get(wordstart, wordend)
         if self.checker.check(word):
-            print(f"Correct spelling: {word}")
             self.tag_remove("misspelled", wordstart, "%s+%dc" % (wordstart, len(word)))
         else:
-            print(f"incorrect spelling: {word}")
             self.tag_add("misspelled", wordstart, "%s+%dc" % (wordstart, len(word)))
 
     def show_popup(self, event):

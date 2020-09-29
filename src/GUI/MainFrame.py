@@ -2,18 +2,12 @@ import tkinter.filedialog
 import tkinter as tk
 import tkinter.font as tkFont
 import os
+import jsonref
 from tkinter.messagebox import showwarning
 from .CustomFrames import ManagePage, EditPage
 
 
 class MainLayout(tk.Frame):
-    colours = {
-        "border": '#3B3B3B',
-        "main": '#2B2B2B',
-        "text": '#A9B7C6',
-        "active": "#A6A6A6",
-    }
-
     widgets = {
         "menubar": {},
         "statusbar": {},
@@ -24,16 +18,13 @@ class MainLayout(tk.Frame):
     frames = {}
 
     def __init__(self, parent, controller, state):
-        self.fnt_main = tkFont.Font(root=controller, family="Arial", size=11)
-        self.button_styles = {
-            "background": self.colours["border"],
-            "foreground": self.colours["text"],
-            "activebackground": self.colours["active"],
-            "font": self.fnt_main,
-            "relief": tk.FLAT,
-            "padx": 3,
-            "pady": 1,
-        }
+
+        with open(os.path.join(os.getcwd(), "src/GUI/styles.json"), "r") as f:
+            style = jsonref.load(f)
+        self.current_style = style["default"]
+        self.fnt_main = tkFont.Font(root=controller, **self.current_style["font"])
+        self.current_style["button"]["font"] = self.fnt_main
+
         self.parent = parent
         self.controller = controller
         self.state = state
@@ -41,7 +32,7 @@ class MainLayout(tk.Frame):
 
         self.content_frame = tk.Frame(
             master=self,
-            background=self.colours["main"],
+            **self.current_style["main_frame"],
         )
         self.content_frame.rowconfigure(0, weight=1)
         self.content_frame.columnconfigure(0, weight=1)
@@ -56,9 +47,8 @@ class MainLayout(tk.Frame):
     def build_menubar(self):
         frm_menubar = tk.Frame(
             master=self,
-            background=self.colours["border"],
             highlightthickness=1,
-            relief=tk.RIDGE,
+            **self.current_style["side_frame"]
         )
         self.widgets["menubar"]["frm_menubar"] = frm_menubar
 
@@ -66,7 +56,7 @@ class MainLayout(tk.Frame):
             master=frm_menubar,
             text="New Area",
             command=self.new_area,
-            **self.button_styles
+            **self.current_style["button"]
         )
         btn_newarea.pack(fill=tk.X, side=tk.LEFT, expand=False)
 
@@ -74,7 +64,7 @@ class MainLayout(tk.Frame):
             master=frm_menubar,
             text="Select area",
             command=self.browse_areas,
-            **self.button_styles,
+            **self.current_style["button"]
         )
         btn_openarea.pack(fill=tk.X, side=tk.LEFT, expand=False)
 
@@ -82,7 +72,7 @@ class MainLayout(tk.Frame):
         btn_manageframe = tk.Button(master=frm_menubar,
                                     text="Manage Area",
                                     command=lambda: self.show_frame("managepage"),
-                                    **self.button_styles,
+                                    **self.current_style["button"]
                                     )
         self.widgets["menubar"]["btn_manageframe"] = btn_manageframe
         btn_manageframe.pack(fill=tk.X, side=tk.LEFT, expand=False)
@@ -90,7 +80,7 @@ class MainLayout(tk.Frame):
         btn_texteditor = tk.Button(master=frm_menubar,
                                    text="Text Editor",
                                    command=lambda: self.show_frame("editpage"),
-                                   **self.button_styles,
+                                   **self.current_style["button"]
                                    )
         self.widgets["menubar"]["btn_texteditor"] = btn_texteditor
         btn_texteditor.pack(fill=tk.X, side=tk.LEFT, expand=False)
@@ -99,14 +89,12 @@ class MainLayout(tk.Frame):
 
     def build_statusbar(self):
         frm_statusbar = tk.Frame(master=self,
-                                 background=self.colours["border"],
                                  highlightthickness=1,
-                                 relief=tk.RIDGE,
+                                 **self.current_style["side_frame"],
                                  )
         lbl_status = tk.Label(master=frm_statusbar,
                               text="Current Area: {}".format(self.state.current_area),
-                              background=self.colours["border"],
-                              foreground=self.colours["text"],
+                              **self.current_style["label"],
                               font=self.fnt_main
                               )
         self.widgets["statusbar"]["lbl_status"] = lbl_status
@@ -117,17 +105,17 @@ class MainLayout(tk.Frame):
         self.frames["editpage"] = EditPage(
             parent=self.content_frame,
             mainframe=self,
-            colours=self.colours,
             state=self.state,
-            button_styles=self.button_styles,
-            fnt_main=self.fnt_main)
+            fnt_main=self.fnt_main,
+            style=self.current_style
+        )
         self.frames["managepage"] = ManagePage(
             parent=self.content_frame,
             mainframe=self,
-            colours=self.colours,
             state=self.state,
-            button_styles=self.button_styles,
-            fnt_main=self.fnt_main)
+            fnt_main=self.fnt_main,
+            style=self.current_style
+        )
 
     def show_frame(self, framename):
         self.frames[framename].tkraise()

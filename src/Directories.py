@@ -142,6 +142,7 @@ class DirectoryManager(object):
 
     @is_managed
     def add_folder(self, area, folder, tags=[]):
+        print(area, folder)
         if not self.check_folder_collision(area=area, folder=folder):
             print("Creating new folder...")
             os.mkdir(os.path.join(area, folder))
@@ -202,13 +203,38 @@ class DirectoryManager(object):
         if not (os.path.exists(os.path.join(area, self.settings_folder)) or os.path.isdir(
                 os.path.join(area, self.settings_folder))):
             os.mkdir(os.path.join(area, self.settings_folder))
-        self._write_settings(area, self.settings_template)
+        new_settings = self.settings_template
+        for dir in os.listdir(area):
+            if dir == ".note_manager":
+                return
+            folder = os.path.join(area, dir)
+            if os.path.isdir(folder):
+                if not (os.path.exists(os.path.join(area, dir)) and os.path.isdir(os.path.join(area, dir))):
+                    print("Creating new folder...")
+                    os.mkdir(folder)
+                    print("Folder created")
+                new_folder = {
+                    'name': dir,
+                    'tags': [],
+                }
+                new_settings["folders"][dir] = new_folder
+        self._write_settings(area, new_settings)
 
     @is_managed
     def add_all_folders(self, area):
         for dir in os.listdir(area):
             if os.path.isdir(dir):
-                self.add_folder(area=area, foldername=dir)
+                if not (os.path.exists(os.path.join(area, dir)) and os.path.isdir(os.path.join(area, dir))):
+                    print("Creating new folder...")
+                    os.mkdir(os.path.join(area, dir))
+                    print("Folder created")
+                new_folder = {
+                    'name': dir,
+                    'tags': [],
+                }
+                settings = self._get_settings(area)
+                settings["folders"][dir] = new_folder
+                self._write_settings(area=area, settings=settings)
 
     @is_managed
     def _get_settings(self, area):

@@ -1,0 +1,54 @@
+{
+  "default": {
+    "colours": {
+      "border": "#3B3B3B",
+      "main": "#2B2B2B",
+      "text": "#A9B7C6",
+      "active": "#A6A6A6"
+    },
+    "font": {
+      "family": "Arial",
+      "size": 11
+    },
+    "button": {
+      "background": "#3B3B3B",
+      "foreground": "#A9B7C6",
+      "activebackground": "#A6A6A6",
+      "relief": "flat",
+      "padx": 3,
+      "pady": 1
+    },
+    "label": {
+      "background": "#3B3B3B",
+      "foreground": "#A9B7C6"
+    },
+    "side_frame": {
+      "background": "#3B3B3B",
+      "relief": "ridge"
+    },
+    "main_frame": {
+      "background": "#2B2B2B",
+      "relief": "ridge"
+    },
+    "list_box": {
+      "background": "#3B3B3B",
+      "foreground": "#A9B7C6"
+    },
+    "window": {
+      "background": "#2B2B2B"
+    },
+    "entry": {
+      "background": "#2B2B2B",
+      "foreground": "#A9B7C6"
+    },
+    "textarea": {
+      "background": "#2B2B2B",
+      "foreground": "#A9B7C6",
+      "relief": "sunken",
+      "insertbackground": "white",
+      "borderwidth": 1,
+      "padx": 5,
+      "pady": 5
+    }
+  }
+}

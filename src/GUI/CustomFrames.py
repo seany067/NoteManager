@@ -5,9 +5,8 @@ import copy
 
 
 class ManagePage(tk.Frame):
-    def __init__(self, parent, mainframe, colours, state, button_styles, fnt_main, *args, **kwargs):
-        self.colours = colours
-        self.button_styles = button_styles
+    def __init__(self, parent, mainframe, state, style, fnt_main):
+        self.style = style
         self.fnt_main = fnt_main
         self.state = state
         self.parent = parent
@@ -17,22 +16,21 @@ class ManagePage(tk.Frame):
             master=parent,
             width=800,
             height=800,
-            background=self.colours["main"], *args, **kwargs
+            **self.style["main_frame"],
         )
 
         # Left hand side
 
         self.frm_fldexp = tk.Frame(
             master=self,
-            background=self.colours["border"],
+            **self.style["side_frame"],
         )
         self.frm_fldexp.pack(fill=tk.Y, side=tk.LEFT, expand=False)
 
         self.lb_folders = tk.Listbox(
             master=self.frm_fldexp,
-            background=self.colours["border"],
             font=self.fnt_main,
-            foreground=self.colours["text"],
+            **self.style["list_box"]
         )
         self.lb_folders.bind('<<ListboxSelect>>', self.on_select)
         self.fill_folders()
@@ -47,14 +45,14 @@ class ManagePage(tk.Frame):
             master=frm_fldbtns,
             text="Add Folder",
             command=self.add_folder,
-            **self.button_styles
+            **self.style["button"]
         )
         btn_newfolder.grid(row=1, column=1, sticky="ew")
 
         # Right hand side
 
         frm_fldmng = tk.Frame(master=self,
-                              background=self.colours["main"]
+                              **self.style["main_frame"]
                               )
         frm_fldmng.columnconfigure(0, weight=1, uniform="group1")
         frm_fldmng.columnconfigure(1, weight=1, uniform="group1")
@@ -64,25 +62,22 @@ class ManagePage(tk.Frame):
 
         self.frm_foldertags = tk.Frame(
             master=frm_fldmng,
-            background=self.colours["main"],
             borderwidth=1,
-            relief=tk.RIDGE,
+            **self.style["main_frame"]
         )
         self.frm_foldertags.grid(row=0, column=0, sticky="nsew")
 
         self.frm_fldinfo = tk.Frame(
             master=frm_fldmng,
-            background=self.colours["main"],
             borderwidth=1,
-            relief=tk.RIDGE,
+            **self.style["main_frame"]
         )
         self.frm_fldinfo.grid(row=0, column=2, sticky="nsew")
 
         self.frm_files = tk.Frame(
             master=frm_fldmng,
-            background=self.colours["main"],
             borderwidth=1,
-            relief=tk.RIDGE,
+            **self.style["main_frame"]
         )
         self.frm_files.grid(row=0, column=1, sticky="nsew")
 
@@ -111,16 +106,15 @@ class ManagePage(tk.Frame):
             widget.destroy()
         if data is not None:
             for tag in data["tags"]:
-                frm_label = tk.Frame(master=self.frm_foldertags,
-                                     background=self.colours["main"],
-                                     relief=tk.RIDGE
-                                     )
+                frm_label = tk.Frame(
+                    master=self.frm_foldertags,
+                    **self.style["main_frame"]
+                )
                 frm_label.pack(fill=tk.X, side=tk.TOP, expand=False)
                 label = tk.Label(
                     master=frm_label,
                     text=tag,
-                    background=self.colours["main"],
-                    foreground=self.colours["text"],
+                    **self.style["label"],
                     font=self.fnt_main,
                 )
                 label.pack(fill=tk.Y, side=tk.LEFT, expand=False)
@@ -128,7 +122,7 @@ class ManagePage(tk.Frame):
                 btn = tk.Button(
                     master=frm_label,
                     text="Remove",
-                    **self.button_styles,
+                    **self.style["button"],
                     command=lambda folder=folder, tag=tag: self.remove_tag(folder=folder, tag=tag),
                 )
                 btn.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
@@ -136,7 +130,7 @@ class ManagePage(tk.Frame):
             btn_newtag = tk.Button(
                 master=self.frm_foldertags,
                 text="Add tag",
-                **self.button_styles,
+                **self.style["button"],
                 command=lambda folder=folder: self.add_tag(folder=folder)
             )
             btn_newtag.pack(fill=tk.X, side=tk.BOTTOM, expand=False)
@@ -152,15 +146,13 @@ class ManagePage(tk.Frame):
                 else:
                     frm_label = tk.Frame(
                         master=self.frm_fldinfo,
-                        background=self.colours["main"],
-                        relief=tk.RIDGE
+                        **self.style["main_frame"],
                     )
                     frm_label.pack(fill=tk.X, side=tk.TOP, expand=False)
                     lbl_type = tk.Label(
                         master=frm_label,
                         text=type,
-                        background=self.colours["main"],
-                        foreground=self.colours["text"],
+                        **self.style["label"],
                         font=self.fnt_main,
                     )
                     lbl_type.pack(fill=tk.Y, side=tk.LEFT, expand=False)
@@ -168,8 +160,7 @@ class ManagePage(tk.Frame):
                     lbl_value = tk.Label(
                         master=frm_label,
                         text=value,
-                        background=self.colours["main"],
-                        foreground=self.colours["text"],
+                        **self.style["label"],
                         font=self.fnt_main,
                     )
                     lbl_value.pack(fill=tk.Y, side=tk.RIGHT, expand=False)
@@ -187,15 +178,13 @@ class ManagePage(tk.Frame):
 
             frm_file = tk.Frame(
                 master=self.frm_files,
-                background=self.colours["main"],
-                relief=tk.RIDGE
+                **self.style["main_frame"],
             )
             frm_file.pack(fill=tk.X, side=tk.TOP, expand=False)
             lbl_file = tk.Label(
                 master=frm_file,
                 text=filename,
-                background=self.colours["main"],
-                foreground=self.colours["text"],
+                **self.style["label"],
                 font=self.fnt_main,
             )
 
@@ -203,7 +192,7 @@ class ManagePage(tk.Frame):
             btn_load = tk.Button(
                 master=frm_file,
                 text="Open",
-                **self.button_styles,
+                **self.style["button"],
                 command=lambda filename=filename, foldername=foldername: self.open_file(file=filename,
                                                                                         folder=foldername),
             )
@@ -235,14 +224,13 @@ class ManagePage(tk.Frame):
         window.grid_columnconfigure(1, weight=1)
         window.geometry("250x100")
         window.title("New Tag")
-        window.configure(background=self.colours["main"])
+        window.configure(**self.style["window"])
         window.grab_set()
 
         lbl_filename = tk.Label(
             master=window,
             text="Tag:",
-            background=self.colours["main"],
-            foreground=self.colours["text"],
+            **self.style["label"],
             font=self.fnt_main,
         )
         lbl_filename.grid(row=0, column=0, sticky="e")
@@ -251,15 +239,14 @@ class ManagePage(tk.Frame):
         ent_tag = tk.Entry(
             master=window,
             font=self.fnt_main,
-            background=self.colours["main"],
-            foreground=self.colours["text"],
+            **self.style["entry"],
             textvariable=data
         )
         ent_tag.grid(row=0, column=1, sticky="w")
 
         btn_cancel = tk.Button(
             master=window,
-            **self.button_styles,
+            **self.style["button"],
             text="Cancel",
             command=window.destroy,
         )
@@ -267,7 +254,7 @@ class ManagePage(tk.Frame):
 
         btn_add = tk.Button(
             master=window,
-            **self.button_styles,
+            **self.style["button"],
             text="Add Tag",
             command=window.destroy
         )
@@ -284,14 +271,13 @@ class ManagePage(tk.Frame):
         window.grid_columnconfigure(1, weight=1)
         window.geometry("250x100")
         window.title("New Folder")
-        window.configure(background=self.colours["main"])
+        window.configure(**self.style["window"])
         window.grab_set()
 
         lbl_filename = tk.Label(
             master=window,
             text="FolderName:",
-            background=self.colours["main"],
-            foreground=self.colours["text"],
+            **self.style["label"],
             font=self.fnt_main,
         )
         lbl_filename.grid(row=0, column=0, sticky="e")
@@ -300,15 +286,14 @@ class ManagePage(tk.Frame):
         ent_folder = tk.Entry(
             master=window,
             font=self.fnt_main,
-            background=self.colours["main"],
-            foreground=self.colours["text"],
+            **self.style["entry"],
             textvariable=data
         )
         ent_folder.grid(row=0, column=1, sticky="w")
 
         btn_cancel = tk.Button(
             master=window,
-            **self.button_styles,
+            **self.style["button"],
             text="Cancel",
             command=window.destroy,
         )
@@ -316,7 +301,7 @@ class ManagePage(tk.Frame):
 
         btn_add = tk.Button(
             master=window,
-            **self.button_styles,
+            **self.style["button"],
             text="Create folder",
             command=window.destroy
         )
@@ -327,43 +312,44 @@ class ManagePage(tk.Frame):
 
 
 class EditPage(tk.Frame):
-    def __init__(self, parent, mainframe, colours, state, button_styles, fnt_main, *args, **kwargs):
-        self.colours = colours
-        self.button_styles = button_styles
+    file_types = [
+        ".md",
+        ".txt",
+    ]
+
+    def __init__(self, parent, mainframe, state, fnt_main, style):
+        self.style = style
         self.fnt_main = fnt_main
         self.state = state
         self.mainframe = mainframe
-        tk.Frame.__init__(self,
-                          master=parent,
-                          width=800,
-                          height=800,
-                          background=self.colours["main"], *args, **kwargs)
+        tk.Frame.__init__(
+            self,
+            master=parent,
+            width=800,
+            height=800,
+            **self.style["main_frame"]
+        )
 
         self.rowconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
 
-        frm_buttons = tk.Frame(master=self,
-                               background=self.colours["border"],
-                               highlightthickness=1,
-                               relief=tk.RIDGE,
-                               )
+        frm_buttons = tk.Frame(
+            master=self,
+            highlightthickness=1,
+            **self.style["side_frame"]
+        )
         frm_buttons.grid(row=0, column=0, sticky="ns", )
 
-        frm_textarea = tk.Frame(master=self,
-                                background=self.colours["main"],
-                                )
+        frm_textarea = tk.Frame(
+            master=self,
+            **self.style["main_frame"]
+        )
         frm_textarea.grid(row=0, column=1, sticky="nsew")
 
         self.txt_area = MarkdownEditor(
             master=frm_textarea,
-            background=self.colours["main"],
-            foreground=self.colours["text"],
+            **self.style["textarea"],
             font=self.fnt_main,
-            borderwidth=1,
-            relief=tk.SUNKEN,
-            padx=5,
-            pady=5,
-            insertbackground='white'
         )
         self.txt_area.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
@@ -378,23 +364,23 @@ class EditPage(tk.Frame):
         btn_save = tk.Button(
             master=frm_buttons,
             text="Save",
-            **self.button_styles,
-            command=self.quick_save_file
+            **self.style["button"],
+            command=self.quick_save_file,
         )
         btn_save.pack(fill=tk.X, side=tk.TOP, expand=False)
 
         btn_saveas = tk.Button(
             master=frm_buttons,
             text="New Save",
-            **self.button_styles,
-            command=self.save_as_pop,
+            **self.style["button"],
+            command=self.new_save_file,
         )
         btn_saveas.pack(fill=tk.X, side=tk.TOP, expand=False)
 
         btn_newfile = tk.Button(
             master=frm_buttons,
             text="New File",
-            **self.button_styles,
+            **self.style["button"],
             command=self.new_file,
         )
         btn_newfile.pack(fill=tk.X, side=tk.TOP, expand=False)
@@ -407,50 +393,69 @@ class EditPage(tk.Frame):
         window.grid_columnconfigure(0, weight=1)
         window.grid_rowconfigure(1, weight=1)
         window.grid_columnconfigure(1, weight=1)
+        window.grid_rowconfigure(2, weight=1)
         window.geometry("250x100")
         window.title("Save As")
-        window.configure(background=self.colours["main"])
+        window.configure(**self.style["window"],)
         window.grab_set()
+
+        confirm = tk.BooleanVar()
 
         lbl_filename = tk.Label(
             master=window,
             text="Filename:",
-            background=self.colours["main"],
-            foreground=self.colours["text"],
+            **self.style["label"],
             font=self.fnt_main,
         )
         lbl_filename.grid(row=0, column=0, sticky="e")
 
+        filename = tk.StringVar()
         ent_filename = tk.Entry(
             master=window,
             font=self.fnt_main,
-            background=self.colours["main"],
-            foreground=self.colours["text"],
+            **self.style["entry"],
+            textvariable=filename
         )
         ent_filename.grid(row=0, column=1, sticky="w")
 
-        btn_cancel = tk.Button(
-            master=window,
-            **self.button_styles,
-            text="Cancel",
-            command=window.destroy,
+        filetype = tk.StringVar()
+        filetype.set(self.file_types[0])
+        otm_type = tk.OptionMenu(
+            window,
+            filetype,
+            *self.file_types,
         )
-        btn_cancel.grid(row=1, column=0, sticky="e")
+        otm_type.grid(row=1, column=1, sticky="ew")
 
-        def save_button():
-            self.new_save_file(name=ent_filename.get(), data=self.txt_area.get("1.0", tk.END))
+        def button_click(button, variable):
+            variable.set(button)
             window.destroy()
 
         btn_cancel = tk.Button(
             master=window,
-            **self.button_styles,
-            text="Save",
-            command=save_button,
+            **self.style["button"],
+            text="Cancel",
+            command=lambda variable=confirm: button_click(False, variable),
         )
-        btn_cancel.grid(row=1, column=1, sticky="w")
+        btn_cancel.grid(row=2, column=0, sticky="e")
 
-    def new_save_file(self, data, name):
+        btn_cancel = tk.Button(
+            master=window,
+            **self.style["button"],
+            text="Save",
+            command=lambda variable=confirm: button_click(True, variable),
+        )
+        btn_cancel.grid(row=2, column=1, sticky="w")
+
+        window.wait_window()
+        return filename.get().split(".")[0] + filetype.get() if confirm.get() else None
+
+    def new_save_file(self):
         # Save file to folder
+        data = self.txt_area.get("1.0", tk.END)
+        name = self.save_as_pop()
+        if name is None:
+            return
         if self.state.current_area is None:
             tk.messagebox.showerror(title="Error", message="Please select an area first")
             return
@@ -472,7 +477,7 @@ class EditPage(tk.Frame):
             tk.messagebox.showerror(title="Error", message="Please select an area first")
             return
         if self.state.current_file is None:
-            return self.save_as_pop()
+            return self.new_save_file()
         outcome = self.state.manager.save_file(
             area=self.state.current_area,
             folder=self.state.current_folder,
