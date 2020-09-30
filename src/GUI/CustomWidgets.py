@@ -1,6 +1,7 @@
 import tkinter as tk
 import os
 import enchant
+import string
 
 
 class MarkdownEditor(tk.Text):
@@ -14,7 +15,7 @@ class MarkdownEditor(tk.Text):
         self.bind("<space>", self.spellcheck)
         self.bind("<Return>", self.spellcheck)
         self.bind("<Button-3>", self.show_popup)
-        self.checker = enchant.Dict("en_GB")
+        self.checker = enchant.DictWithPWL("en_GB", os.path.join(os.getcwd(), "src/GUI", "accepted_words.txt"))
 
         with open(os.path.join(os.getcwd(), "src/GUI", "words_alpha.txt"), 'r') as f:
             self.dictionary = set(f.read().split('\n'))
@@ -22,7 +23,10 @@ class MarkdownEditor(tk.Text):
     def spellcheck(self, event):
         wordend = self.index(tk.INSERT)
         wordstart = self.index("{0} wordstart".format(self.index(wordend + "-1c")))
-        word = self.get(wordstart, wordend)
+        word = self.get(wordstart, wordend).strip().translate(str.maketrans('', '', string.punctuation))
+        if not word:
+            return
+        print(word)
         if self.checker.check(word):
             self.tag_remove("misspelled", wordstart, "%s+%dc" % (wordstart, len(word)))
         else:
@@ -43,7 +47,9 @@ class MarkdownEditor(tk.Text):
         self.mark_set(tk.INSERT, pos)
         wordstart = self.index(f"{pos} wordstart")
         wordend = self.index(f"{pos} wordend")
-        word = self.get(wordstart, wordend)
+        word = self.get(wordstart, wordend).strip().translate(str.maketrans('', '', string.punctuation))
+        if not word:
+            return
         if not self.checker.check(word) and word != "\n":
             suggestions = self.checker.suggest(word)
             for w in suggestions:
@@ -51,8 +57,23 @@ class MarkdownEditor(tk.Text):
                     label=w,
                     command=lambda start=wordstart, end=wordend, newword=w: self.correct(start, end, newword)
                 )
+        menu.add_command(
+            label="Add to Dictionary",
+            command=lambda start=wordstart, end=wordend, word=word: self.add_to_dict(start, end, word)
+        )
+        menu.add_command(
+            label="Ignore",
+            command=lambda start=wordstart, end=wordend: self.ignore(start, end)
+        )
         return menu
 
     def correct(self, start, end, word):
         self.delete(start, end)
         self.insert(start, word)
+
+    def ignore(self, start, end):
+        self.tag_remove("misspelled", start, end)
+
+    def add_to_dict(self, start, end, word):
+        self.checker.add(word)
+        self.ignore(start, end)
