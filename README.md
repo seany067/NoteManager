@@ -3,7 +3,7 @@ Note managing application written in python tkinter. Uses a simple folder struct
 
 ## How it works
 Upon adding a directory as a an area for NoteManager to manage it creates a .note_manager folder which contains a .json with information about that folder area, where notes will be automatically placed. 
-Within that "area" each folder will have associated tags that can be added to or updates stored in the .json which is uses to correctly place the note files, by matching the contents of the notes to the tags associated with each folder. Currently mainly supports basic text files and markdown files
+Within that "area" each folder will have associated tags that can be added to or updates stored in the .json which is uses to correctly place the note files, by matching the contents of the notes to the tags associated with each folder using regular expressions. Currently mainly supports basic text files and markdown files.
 
 The folder structure will typically look like:
 ```
